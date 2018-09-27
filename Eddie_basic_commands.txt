@@ -1,0 +1,57 @@
+
+###Open staging node
+qlogin -q staging
+
+#######Dirs ###############
+## If I change to this directory, I would essentially have unlimited storage but only for like 28 days
+cd /exports/eddie/scratch/s1684303/
+
+##This one is Tamir's lab data storage (2Tb!)
+/exports/igmm/datastore/tchandra-lab
+
+##This is another one in Tamir's lab but not sure what its for, 200 gb
+/exports/igmm/eddie/tchandra-lab
+
+
+###copy files from Eddie to datastore (then remove after, just safer to do that imo)
+cp -a MR-scRNAseq-40080044/. /exports/igmm/datastore/tchandra-lab/Daniel_Simpson/MR_scRNA_NatureProj/Raw_Fastq_Files
+
+###copy from datastore to eddie
+cp -a /exports/igmm/datastore/tchandra-lab/Daniel_Simpson/Kristina_11141/. Kristina_11141/
+
+
+#####opening a Qlogin node ##############
+####this is one core with however much memory you can get/set. In this case its 30gb which is pretty high. Its for doing quick interactive R jobs and that sort of thing
+qlogin -l h_vmem=30G
+
+
+
+###Submitting jobs (See separate script for example of Qsub job ############
+qsub myscript.sh
+###status of jobs submitting
+qstat
+##or real time watching
+watch qstat
+###Deleting script
+qdel <jobidnumber>
+####deleting all jobs
+qdel -u s1684303
+
+####check qsub errors you might get eqw error
+qstat -j <jobb_no> | grep error
+
+
+
+###loading modules
+module load igmm/apps/R/3.5.1
+###may need to change default library path to something else once in R, eg.
+.libPaths("/gpfs/igmmfs01/eddie/tchandra-lab/Daniel_Simpson/R/x86_64-pc-linux-gnu-library/3.3/")
+
+
+
+
+
+
+
+
+
