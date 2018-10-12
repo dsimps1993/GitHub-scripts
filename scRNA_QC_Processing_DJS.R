@@ -538,12 +538,15 @@ for (i in clus){
   dev.off()
 }
 
+
+#####For DE and Markers, p and Auroc are set low so that we can see as much differences as we can, no matter how subtle
+
 ####DE
 for (i in clus){
   outfile <- paste(i,"clusters_SCE_DE.png",sep="")
   png(outfile, width = 10, height = 10, units = 'in', res = 600)
   sc3_plot_de_genes(
-    SCE.sce.keep.filt.sc3, k = i, 
+    SCE.sce.keep.filt.sc3, k = i, p.val = 0.1, 
     show_pdata = c(
       "Tissue_Correct", 
       "Genotype", 
@@ -561,7 +564,7 @@ for (i in clus){
   outfile <- paste(i,"clusters_SCE_Markers.png",sep="")
   png(outfile, width = 10, height = 10, units = 'in', res = 600)
   sc3_plot_markers(
-    SCE.sce.keep.filt.sc3, k = i, 
+    SCE.sce.keep.filt.sc3, k = i, auroc = 0.6, p.val = 0.1, 
     show_pdata = c(
       "Tissue_Correct", 
       "Genotype", 
