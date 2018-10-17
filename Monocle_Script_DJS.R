@@ -21,6 +21,12 @@ expressed_genes <- row.names(subset(fData(SCE),
                                     num_cells_expressed >= 10)) 
 
 
+
+####In this section you can use either method 1 or method 2 to select genes to create pseudotime graph
+
+#######Method 1 - Using differential expression between known groups to select genes to map for pseudotime #################
+#####In this case its DE based on 'Genotype', but it could be whatever is in your phenodata, eg tissue.
+
 diff_test_res <- differentialGeneTest(SCE[expressed_genes,],
                                       fullModelFormulaStr = "~Genotype") ###here you need to put in the section of your pheno data that you want to explore for differential expression between groups, in my case its cell phase
 ordering_genes <- row.names (subset(diff_test_res, qval < 0.01))
@@ -36,7 +42,63 @@ plot_pc_variance_explained(SCE, return_all = F)
 SCE.RD <- reduceDimension(SCE, max_components = 2, method = 'DDRTree')
 
 SCE.RD <- orderCells(SCE.RD)
+####################################### End of DE method 1 ####################################################################
 
+###### Method 2 - Using DPfeature to unbiasley select desired genes ###########################################################
+###using dpFeature for an unbiased approach
+fData(SCE.RD)$use_for_ordering <-
+  fData(SCE.RD)$num_cells_expressed > 0.05 * ncol(SCE.RD)
+
+plot_pc_variance_explained(SCE.RD, return_all = F)
+
+###reducing dims and eventually getting our own clusters to use for DE
+SCE.RD <- reduceDimension(SCE.RD,
+                                               max_components = 2,
+                                               norm_method = 'log',
+                                               num_dim = 3,
+                                               reduction_method = 'tSNE',
+                                               verbose = T)
+
+SCE.RD <- clusterCells(SCE.RD, verbose = F)
+
+###checking clustering results
+plot_cell_clusters(SCE.RD, color_by = 'as.factor(Cluster)')
+plot_cell_clusters(SCE.RD, color_by = 'as.factor(Plate)')
+plot_cell_clusters(SCE.RD, color_by = 'as.factor(res.1)')
+
+####checking  P and delta settings for defining cell clusters, which we can change later
+plot_rho_delta(SCE.RD, rho_threshold = 2, delta_threshold = 4)
+#### This shit we might want to go over for the meeting
+
+SCE.RD <- clusterCells(SCE.RD,
+                                              rho_threshold = 2,
+                                              delta_threshold = 4,
+                                              skip_rho_sigma = T,
+                                              verbose = F)
+
+
+plot_cell_clusters(SCE.RD, color_by = 'as.factor(Cluster)')
+plot_cell_clusters(SCE.RD, color_by = 'as.factor(Plate)')
+plot_cell_clusters(SCE.RD, color_by = 'as.factor(res.1)')
+
+
+clustering_DEG_genes <-
+  differentialGeneTest(SCE.RD,
+                       fullModelFormulaStr = '~Cluster',
+                       cores = 1)
+
+
+SCE.RD_ordering_genes <-
+  row.names(clustering_DEG_genes)[order(clustering_DEG_genes$qval)][1:1000]
+
+SCE.RD <-
+  setOrderingFilter(SCE.RD,
+                    ordering_genes = SCE.RD_ordering_genes)
+
+SCE.RD <-
+  reduceDimension(SCE.RD, method = 'DDRTree')
+
+#########################End of Method 2 #####################################################################################
 
 
 png("SCE_Genotype_Traject_Monocle.png", width = 9, height = 5, units = 'in', res = 500)
