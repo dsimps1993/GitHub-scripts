@@ -17,7 +17,13 @@ SCE.mon <- newCellDataSet(logcounts(SCE),
                           phenoData = new("AnnotatedDataFrame", data = as.data.frame(colData(SCE))), 
                           expressionFamily = negbinomial.size()) ########look online, you may want to change this variable depending on your datatype
 
-expressed_genes <- row.names(subset(fData(SCE),
+SCE.mon <- estimateSizeFactors(SCE.mon)
+SCE.mon <- estimateDispersions(SCE.mon) 
+
+SCE.mon <- detectGenes(SCE.mon, min_expr = 0.1)
+
+
+expressed_genes <- row.names(subset(fData(SCE.mon),
                                     num_cells_expressed >= 10)) 
 
 
