@@ -385,7 +385,7 @@ library(dplyr)
 
 
 SCE.sce.serutty<- CreateSeuratObject(
-  raw.data = counts(SCE.sce),
+  raw.data = counts(SCE.sce.keep.filt),
   meta.data = as.data.frame(SCE.sce@colData),
   min.cells = 3, 
   min.genes = 200
