@@ -82,6 +82,12 @@ SCE.sce <- SingleCellExperiment(assays = list(counts = as.matrix(SCE.counts)), c
 
 ###Keeping features - we can filter out features (genes) that are not expressed in any cells:
 
+
+#### Adding log10 counts early  ################
+logcounts(SCE.sce) <- log2(as.matrix(counts(SCE.sce))+1)
+
+
+
 keep_feature <- rowSums(counts(SCE.sce) > 0) > 0 
 
 SCE.sce.keep <- SCE.sce[keep_feature, ] 
@@ -179,12 +185,8 @@ abline(v = 5, col = "red")
 dev.off()
 
 
-png("SCE_histo_avgcounts_preQC.png", width = 6, height = 5, units = 'in', res = 500)  
-ave.counts <- calcAverage(SCE.sce.keep)
-hist(log10(ave.counts), breaks=100, main="", col="grey80", xlab=expression(Log[10]~"average count"))
-dev.off()
 
-png("SCE_total_features_hist_ab4000.png", width = 6, height = 5, units = 'in', res = 600)
+png("SCE_total_features_hist.png", width = 6, height = 5, units = 'in', res = 600)
 hist(
   SCE.sce.keep$total_features,
   breaks = 50,
@@ -262,9 +264,6 @@ plotColData(SCE.sce.keep.filt.sc3, x= "log10_total_counts", y = "total_features"
             colour = "Plate")
 dev.off()
 
-#### Adding log10 counts early to do the PCA ################
-logcounts(SCE.sce.keep.filt) <- log2(as.matrix(counts(SCE.sce.keep.filt))+1)
-logcounts(SCE.sce.keep) <- log2(as.matrix(counts(SCE.sce.keep))+1)
 
 #######PCAsssssss ############################################
 
