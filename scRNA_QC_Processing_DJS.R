@@ -18,7 +18,7 @@ SCE.barcode <- read.table(file.choose()) ###load up barcodes.tsv
 SCE.genenames <- read.table(file.choose()) ###load up genes.tsv
 SCE.moles <- Matrix::readMM(file.choose()) ###load up matrix.mtx
 
-rownames(SCE.moles) <- make.unique(SCE.genenames[,2]) ####if second column is genenames then we want this one, and also uniquing any duplicates, which is essentially adding .1 or .2 to duplicates 
+rownames(SCE.moles) <- make.unique(as.character(SCE.genenames[,2])) ####if second column is genenames then we want this one, and also uniquing any duplicates, which is essentially adding .1 or .2 to duplicates 
 colnames(SCE.moles) <- paste("10x_SCE", SCE.barcode[,1], sep="_")
 
 SCE.anno <- data.frame(Tissue=rep("Embryo", times=ncol(SCE.moles)), Genotype=rep("Het", times=ncol(SCE.moles)))
@@ -104,40 +104,6 @@ SCE.sce.keep <- calculateQCMetrics(
   )
 )
 
-
-######Eoin's 4 block histograms
-
-par(mfrow=c(2,2), mar=c(5.1, 4.1, 0.1, 0.1))
-hist(SCE.sce.keep$log10_total_counts, xlab="Log10 Library size", main="", 
-     breaks=20, col="grey80", ylab="Number of cells")
-hist(SCE.sce.keep$total_features, xlab="Number of expressed genes", main="", 
-     breaks=20, col="grey80", ylab="Number of cells")
-hist(SCE.sce.keep$pct_counts_ERCC, xlab="ERCC proportion (%)", 
-     ylab="Number of cells", breaks=20, main="", col="grey80")
-hist(SCE.sce.keep$pct_counts_MT, xlab="Mitochondrial proportion (%)", 
-     ylab="Number of cells", breaks=20, main="", col="grey80")
-
-
-
-######Scater plots ######
-
-###Can take a long time to load depending on dataset. With 10x theres so many cells dont even bloody bother
-png("SCE_QCplot.png", width = 4, height = 4, units = 'in', res = 300)
-plotQC(SCE.sce.keep)
-dev.off()
-
-png("SCE_QC_expsvsMean.png", width = 8, height = 6, units = 'in', res = 400)
-plotQC(SCE.sce.keep, type = "exprs-freq-vs-mean")
-dev.off()
-
-
-###plot this later if you have time, it shows how much garbage is in the yolk sac
-png("SCE_QC_scaterplot.png", width = 8, height = 6, units = 'in', res = 400)
-par(mfrow=c(1,2)) #, mar=c(5.1, 4.1, 0.1, 0.1))
-plotScater(SCE.sce.keep, colour_by = "Set")
-plotScater(SCE.sce.keep, colour_by = "Group")
-dev.off()
-
 ##### Counts vs Features #############
 
 png("SCE_log10Counts_vs_features_by_Plate.png", width = 8, height = 5, units = 'in', res = 500)
@@ -197,6 +163,27 @@ hist(
 abline(v = 4000, col = "red")
 dev.off()
 
+
+
+
+######Scater plots ######
+
+###Can take a long time to load depending on dataset. With 10x theres so many cells dont even bloody bother
+png("SCE_QCplot.png", width = 4, height = 4, units = 'in', res = 300)
+plotQC(SCE.sce.keep)
+dev.off()
+
+png("SCE_QC_expsvsMean.png", width = 8, height = 6, units = 'in', res = 400)
+plotQC(SCE.sce.keep, type = "exprs-freq-vs-mean")
+dev.off()
+
+
+###plot this later if you have time, it shows how much garbage is in the yolk sac
+png("SCE_QC_scaterplot.png", width = 8, height = 6, units = 'in', res = 400)
+par(mfrow=c(1,2)) #, mar=c(5.1, 4.1, 0.1, 0.1))
+plotScater(SCE.sce.keep, colour_by = "Set")
+plotScater(SCE.sce.keep, colour_by = "Group")
+dev.off()
 
 
 ################################################### Making QC measures based on graphs #################################################
