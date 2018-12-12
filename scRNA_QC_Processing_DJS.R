@@ -407,11 +407,34 @@ SCE.sce.serutty <- RunPCA(
 PCAPlot(object = SCE.sce.serutty, dim.1 = 1, dim.2 = 2, colors.use=SCE.sce.serutty@meta.data$Genotype)
 
 
+####Clustering function provided by Tom Parry 
+reproducible_clusters = function(obj,x){
+  b <- list()
+  for (i in 1:x){
+    Num_PCAs <- (1:x)
+    obj <- FindClusters(obj, dims.use = 1:i)
+    tmp <- length(levels(obj@ident))
+    #### clear all of the output on the console
+    cat("\014")
+    b[[i]] <- tmp
+    #Converts b (a list) into a vector which can be used into constructing a matrix
+    c <- unlist(b)
+  }
+  #constructing the matrix
+  d <- c(Num_PCAs, c)
+  e <- matrix(data = d, ncol=2, byrow = FALSE)
+  colnames(e) <- c("Num of PCAs", "Num of Clusters")
+  print(e)
+}
+
+reproducible_clusters(SCE.sce.serutty, 15)
+###change this to whatever comes up for the table with two PCs
+NUM_PRINCOMP_TO_USE = 4
 
 SCE.sce.serutty <- FindClusters(
   object = SCE.sce.serutty, 
   reduction.type = "pca", 
-  dims.use = 1:8, 
+  dims.use = 1:NUM_PRINCOMP_TO_USE, 
   resolution = 1.0, 
   print.output = 0, 
   save.SNN = TRUE
@@ -420,7 +443,7 @@ SCE.sce.serutty <- FindClusters(
 
 SCE.sce.serutty <- RunTSNE(
   object = SCE.sce.serutty,
-  dims.use = 1:8,
+  dims.use = 1:NUM_PRINCOMP_TO_USE,
   do.fast = TRUE,
   color = SCE.sce.serutty$Plate_Correct
 )
