@@ -78,15 +78,40 @@ rownames(SCE.counts) <- MusGenes2$Gene.name[match(rownames(SCE.counts), MusGenes
 ###creating scater object
 SCE.sce <- SingleCellExperiment(assays = list(counts = as.matrix(SCE.counts)), colData = SCE.pheno)
 
-################### QC! The show we've all been waiting an eternity for! ############################################################################################################
-
-###Keeping features - we can filter out features (genes) that are not expressed in any cells:
-
 
 #### Adding log10 counts early  ################
 logcounts(SCE.sce) <- log2(as.matrix(counts(SCE.sce))+1)
 
 
+
+
+############ Adding new normalization step just to see how well it works #############
+
+#its computed by dividing the counts for each cell by the size factor for that cell. Using log2 values by adding log =true
+normalise(SCE.sce, log = TRUE)
+
+####Normalization CPM ############
+###additional normalization catagory
+
+###CPM function
+calc_cpm <-
+  function (expr_mat, spikes = NULL) 
+  {
+    norm_factor <- colSums(expr_mat[-spikes, ])
+    return(t(t(expr_mat)/norm_factor)) * 10^6
+  }
+
+cpm(SCE.sce) <- log2(calculateCPM(SCE.sce, use.size.factors = FALSE) + 1)
+
+#### So now we've added a variety read counts to our SCE object, we have normcounts, logcounts and cpm. We can see them in the object if you paste just SCE.sce in the terminal and press enter
+
+
+
+
+
+################### QC! The show we've all been waiting an eternity for! ############################################################################################################
+
+###Keeping features - we can filter out features (genes) that are not expressed in any cells:
 
 keep_feature <- rowSums(counts(SCE.sce) > 0) > 0 
 
@@ -107,18 +132,18 @@ SCE.sce.keep <- calculateQCMetrics(
 ##### Counts vs Features #############
 
 png("SCE_log10Counts_vs_features_by_Plate.png", width = 8, height = 5, units = 'in', res = 500)
-plotColData(SCE.sce.keep, x= "log10_total_counts", y = "total_features",
+plotColData(SCE.sce.keep, x= "log10_total_counts", y = "total_features_by_counts",
             colour = "Group", size_by = "pct_counts_ERCC")
 dev.off()
 
 
 
 png("SCE_log10Counts_vs_pctERCC_by_Plate_sizefeat.png", width = 8, height = 5, units = 'in', res = 500)
-plotColData(SCE.sce.keep, x = "log10_total_counts", y = "pct_counts_ERCC", colour = "Group", size = "total_features")
+plotColData(SCE.sce.keep, x = "log10_total_counts", y = "pct_counts_ERCC", colour = "Group", size = "total_features_by_counts")
 dev.off()
 
 png("SCE_log10Counts_vs_pctMito_by_Plate_sizefeat.png", width = 8, height = 5, units = 'in', res = 500)
-plotColData(SCE.sce.keep, x = "log10_total_counts", y = "pct_counts_MT", colour = "Group", size = "total_features")
+plotColData(SCE.sce.keep, x = "log10_total_counts", y = "pct_counts_MT", colour = "Group", size = "total_features_by_counts")
 dev.off()
 
 
@@ -152,9 +177,9 @@ dev.off()
 
 
 
-png("SCE_total_features_hist.png", width = 6, height = 5, units = 'in', res = 600)
+png("SCE_total_features_by_counts_hist.png", width = 6, height = 5, units = 'in', res = 600)
 hist(
-  SCE.sce.keep$total_features,
+  SCE.sce.keep$total_features_by_counts,
   breaks = 50,
   main = "Total Features Histogram",
   xlab = "Total Features",
@@ -188,9 +213,9 @@ dev.off()
 
 ################################################### Making QC measures based on graphs #################################################
 
-filter_by_ERCC <- SCE.sce.keep$pct_counts_feature_controls_ERCC < 25
+filter_by_ERCC <- SCE.sce.keep$pct_counts_ERCC < 25
 filter_by_total_counts <- SCE.sce.keep$log10_total_counts > 5
-filter_by_expr_features <- SCE.sce.keep$total_features >= 4000
+filter_by_expr_features <- SCE.sce.keep$total_features_by_counts >= 4000
 filter_by_MT <- SCE.sce.keep$pct_counts_MT < 20
 
 ### can create other filter measures, eg this one Eoin might want, Ive set to zero but we might want it to be higher, not sure.
@@ -204,8 +229,10 @@ SCE.sce.keep$use <- (
     filter_by_total_counts &
     # remove cells with unusual number of reads in MT genes
     filter_by_MT 
-  #Filt by EGFP if you want
-  #filter_by_EGFP 
+  #Filt by EGFP if you want, just remember to add the '&' in same way as above
+  #filter_by_EGFP
+  #or ERCC
+  #filter_by_ERCC
 )
 
 #########Filtering out unwanted cells #################################################################
@@ -230,24 +257,24 @@ table(SCE.sce.keep.filt$Group)
 
 
 
-##### post QC Counts vs Features #############
+##### post QC Counts vs Features - this isnt essential, this is only if you want to see how the data looks after QC #############
 
 png("SCE_log10Counts_vs_features_by_Plate_postQC.png", width = 8, height = 5, units = 'in', res = 500)
-plotColData(SCE.sce.keep.filt, x = "log10_total_counts", y = "total_features",
+plotColData(SCE.sce.keep.filt, x = "log10_total_counts", y = "total_features_by_counts",
             colour = "Group")
 dev.off()
 
 
 png("SCE_log10Counts_vs_pctMito_by_Plate_sizefeat_postQC.png", width = 8, height = 5, units = 'in', res = 500)
-plotColData(SCE.sce.keep.filt, x = "log10_total_counts", y = "pct_counts_MT", colour = "Group", size = "total_features")
+plotColData(SCE.sce.keep.filt, x = "log10_total_counts", y = "pct_counts_MT", colour = "Group", size = "total_features_by_counts")
 dev.off()
 
 png("SCE_log10Counts_vs_pctERCC_by_Plate_sizefeat_postQC.png", width = 8, height = 5, units = 'in', res = 500)
-plotColData(SCE.sce.keep.filt, x = "log10_total_counts", y = "pct_counts_ERCC", colour = "Group", size = "total_features")
+plotColData(SCE.sce.keep.filt, x = "log10_total_counts", y = "pct_counts_ERCC", colour = "Group", size = "total_features_by_counts")
 dev.off()
 
 png("SCE_log10Counts_vs_features_by_Plate_halffull.png", width = 8, height = 5, units = 'in', res = 500)
-plotColData(SCE.sce.keep.filt.sc3, x= "log10_total_counts", y = "total_features",
+plotColData(SCE.sce.keep.filt.sc3, x= "log10_total_counts", y = "total_features_by_counts",
             colour = "Plate")
 dev.off()
 
@@ -259,7 +286,7 @@ png("SCE_PCA__endog_genes_preQC.png", width = 8, height = 5, units = 'in', res =
 plotPCA(SCE.sce.keep[endog_genes,],
         exprs_values = "counts",
         colour_by="Group",
-        size_by = "total_features",
+        size_by = "total_features_by_counts",
         shape_by = "Set")
 dev.off()
 
@@ -268,7 +295,7 @@ png("SCE_PCA__endog_genes_postQC.png", width = 8, height = 5, units = 'in', res 
 plotPCA(SCE.sce.keep.filt[endog_genes,],
         exprs_values = "counts",
         colour_by="Group",
-        size_by = "total_features",
+        size_by = "total_features_by_counts",
         shape_by = "Set")
 dev.off()
 
@@ -276,7 +303,7 @@ png("SCE_PCA_logcounts_endog_genes_preQC.png", width = 8, height = 5, units = 'i
 plotPCA(SCE.sce.keep.filt[endog_genes,],
         exprs_values = "logcounts",
         colour_by="Group",
-        size_by = "total_features",
+        size_by = "total_features_by_counts",
         shape_by = "Set")
 dev.off()
 
@@ -284,7 +311,7 @@ png("SCE_PCA_logcounts_endog_genes_postQC.png", width = 8, height = 5, units = '
 plotPCA(SCE.sce.keep.filt[endog_genes,],
         exprs_values = "logcounts",
         colour_by="Group",
-        size_by = "total_features",
+        size_by = "total_features_by_counts",
         shape_by = "Set")
 dev.off()
 
@@ -294,7 +321,7 @@ plotTSNE(SCE.sce.keep[endog_genes,],
          exprs_values = "counts",
          perplexity = 130,
          colour_by="Group",
-         size_by = "total_features",
+         size_by = "total_features_by_counts",
          shape_by = "Set")
 dev.off()
 
@@ -303,7 +330,7 @@ plotTSNE(SCE.sce.keep.filt[endog_genes,],
          exprs_values = "counts",
          perplexity = 130,
          colour_by="Group",
-         size_by = "total_features",
+         size_by = "total_features_by_counts",
          shape_by = "Set")
 dev.off()
 
@@ -313,7 +340,7 @@ plotTSNE(SCE.sce.keep[endog_genes,],
          exprs_values = "logcounts",
          perplexity = 130,
          colour_by="Group",
-         size_by = "total_features",
+         size_by = "total_features_by_counts",
          shape_by = "Set")
 dev.off()
 
@@ -322,7 +349,7 @@ plotTSNE(SCE.sce.keep.filt[endog_genes,],
          exprs_values = "logcounts",
          perplexity = 130,
          colour_by="Group",
-         size_by = "total_features",
+         size_by = "total_features_by_counts",
          shape_by = "Set")
 dev.off()
 
@@ -507,8 +534,13 @@ dev.off()
 ####Adding Seurat cluster back to object and can do sc3 cluster
 SCE.sce.keep.filt$Seurat_Clusters <- SCE.sce.serutty@meta.data$res.1
 
+#####Optional step, removing ERCCs. ERCCs might interfer with clustering later, so removing them might be a good idea, and then
+ERCCs <- grepl("^ERCC", rownames(SCE.sce.keep.filt))
 
+##saves the ERCCs counts as a separate object that you can merge back in later if you want to.
+SCE.ERCCs <- SCE.sce.keep.filt[ERCCs,]
 
+SCE.sce.keep.filt <- SCE.sce.keep.filt[!ERCCs,]
 
 ###################### SC3 #########################################
 
@@ -584,7 +616,8 @@ for (i in clus){
   dev.off()
 }
 
-
+###write out results
+sc3_export_results_xls(SCE.sce.keep.filt.sc3)
 
 
 
