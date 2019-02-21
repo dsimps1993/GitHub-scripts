@@ -93,15 +93,10 @@ normalise(SCE.sce, log = TRUE)
 ####Normalization CPM ############
 ###additional normalization catagory
 
-###CPM function
-calc_cpm <-
-  function (expr_mat, spikes = NULL) 
-  {
-    norm_factor <- colSums(expr_mat[-spikes, ])
-    return(t(t(expr_mat)/norm_factor)) * 10^6
-  }
+###CPM 
+cpm(SCE.sce) <- log2(calculateCPM(SCE.sce) + 1)
 
-cpm(SCE.sce) <- log2(calculateCPM(SCE.sce, use.size.factors = FALSE) + 1)
+
 
 #### So now we've added a variety read counts to our SCE object, we have normcounts, logcounts and cpm. We can see them in the object if you paste just SCE.sce in the terminal and press enter
 
