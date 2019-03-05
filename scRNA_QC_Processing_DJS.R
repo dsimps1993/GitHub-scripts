@@ -615,5 +615,53 @@ for (i in clus){
 sc3_export_results_xls(SCE.sce.keep.filt.sc3)
 
 
+####Gene boxplots with 2 catagories ####################
+# Runs wilcox test
+#source https://www.r-bloggers.com/add-p-values-and-significance-levels-to-ggplots/
+
+library(ggpubr)
+FinstateCol <- c("#3771C8","#FF6600")
+listerine <- c("Prdm14", "Zfp42", "Esrrb","Pou3f1")
+for(m in listerine){
+  outfile <- paste(m,"_boxplt.png",sep="")
+  temp <- data.frame(Gene = cpm(SCE.sce.keep.filt.sc3)[m,],
+                     State = SCE.sce.keep.filt.sc3$Final_StateLabs)
+  png(outfile, width = 4, height = 5, units = 'in', res = 500)
+  print(ggboxplot(temp, x = "State", y = "Gene",
+            color = "State", palette = FinstateCol,
+            add = "jitter") + labs(x = "Expression (Log2 CPM Counts)", y = m) + stat_compare_means(aes(label = paste0("p =", ..p.format..)), 
+                                                 label.x = 1.35) 
+        ) 
+        
+    dev.off()}
+
+
+
+
+####Gene boxplots with 3 catagories ####################
+
+library(ggpubr)
+Fig2bGenes <- c("Prdm14", "Zfp42", "Esrrb","Pou3f1")
+col2b <-c("darkorchid3","#3771C8","#FF6600")
+###Pairwise comparisons done by wilcox. Overall P val Kruskal Wallis
+#Source : https://www.r-bloggers.com/add-p-values-and-significance-levels-to-ggplots/
+
+
+for(m in Fig2bGenes){
+	##so here you're running all possible comparisons for the three things in the catagory you want to compare and do statistics on
+  my_comparisons <- list( c("G1 - States 1, 2 & 5",  "G2M - State 3"), c("G2M - State 3", "G2M - State 4"), c("G1 - States 1, 2 & 5", "G2M - State 4") )
+  outfile <- paste(m,"_Boxplt.png",sep="")
+  temp <- data.frame(Gene = cpm(SCE.sce.keep.filt.sc3)[m,],
+                     State = SCE.sce.keep.filt.sc3$Mon_Merged_State)
+  png(outfile, width = 6, height = 5.5, units = 'in', res = 500)
+  print(ggboxplot(temp, x = "State", y = "Gene",
+                  color = "State", palette = col2b,
+                  add = "jitter") + labs(x = "Expression (Log2 CPM Counts)", y = m) + stat_compare_means( comparisons = my_comparisons)+ stat_compare_means(aes(label = paste0("p =", ..p.format..)), label.y= c(max(cpm(AC_NoAsyMG1.keep.filt.sc)[m,])+4)) 
+        
+  ) 
+  
+  dev.off()}
+
+
 
 
