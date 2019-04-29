@@ -79,7 +79,7 @@ rownames(SCE.counts) <- MusGenes2$Gene.name[match(rownames(SCE.counts), MusGenes
 SCE.sce <- SingleCellExperiment(assays = list(counts = as.matrix(SCE.counts)), colData = SCE.pheno)
 
 
-#### Adding log10 counts early  ################
+#### Adding log counts early  ################
 logcounts(SCE.sce) <- log2(as.matrix(counts(SCE.sce))+1)
 
 
