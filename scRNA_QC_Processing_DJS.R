@@ -268,26 +268,12 @@ png("SCE_log10Counts_vs_pctERCC_by_Plate_sizefeat_postQC.png", width = 8, height
 plotColData(SCE.sce.keep.filt, x = "log10_total_counts", y = "pct_counts_ERCC", colour = "Group", size = "total_features_by_counts")
 dev.off()
 
-png("SCE_log10Counts_vs_features_by_Plate_halffull.png", width = 8, height = 5, units = 'in', res = 500)
-plotColData(SCE.sce.keep.filt.sc3, x= "log10_total_counts", y = "total_features_by_counts",
-            colour = "Plate")
-dev.off()
-
 
 #######PCAsssssss ############################################
 
 ###pre QC
 png("SCE_PCA__endog_genes_preQC.png", width = 8, height = 5, units = 'in', res = 500)
 plotPCA(SCE.sce.keep[endog_genes,],
-        exprs_values = "counts",
-        colour_by="Group",
-        size_by = "total_features_by_counts",
-        shape_by = "Set")
-dev.off()
-
-###post QC
-png("SCE_PCA__endog_genes_postQC.png", width = 8, height = 5, units = 'in', res = 500)
-plotPCA(SCE.sce.keep.filt[endog_genes,],
         exprs_values = "counts",
         colour_by="Group",
         size_by = "total_features_by_counts",
@@ -301,6 +287,17 @@ plotPCA(SCE.sce.keep.filt[endog_genes,],
         size_by = "total_features_by_counts",
         shape_by = "Set")
 dev.off()
+
+
+###post QC
+png("SCE_PCA__endog_genes_postQC.png", width = 8, height = 5, units = 'in', res = 500)
+plotPCA(SCE.sce.keep.filt[endog_genes,],
+        exprs_values = "counts",
+        colour_by="Group",
+        size_by = "total_features_by_counts",
+        shape_by = "Set")
+dev.off()
+
 
 png("SCE_PCA_logcounts_endog_genes_postQC.png", width = 8, height = 5, units = 'in', res = 500)
 plotPCA(SCE.sce.keep.filt[endog_genes,],
