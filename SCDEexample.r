@@ -46,7 +46,7 @@ names(AC_NoAsy.MG1p3.5.groups) <- row.names(AC_NoAsy.MG1p3.5.err)
 AC_NoAsy.MG1p3.5.ediff <- scde.expression.difference(AC_NoAsy.MG1p3.5.err, cd, AC_NoAsy.MG1p3.5.prior, groups  =  AC_NoAsy.MG1p3.5.groups, n.randomizations  =  100, n.cores  =  1, verbose  =  1)
 
 # write out a table with all the results, showing most significantly different genes (in both directions) on top
-write.table(AC_NoAsy.MG1p3.5.ediff[order(abs(AC_NoAsy.MG1p3.5.ediff$Z), decreasing = TRUE), ], file = "AC_NoAsy.MG1_state3v5_SCDE_results.txt", row.names = TRUE, col.names = TRUE, sep = "\t", quote = FALSE)
+write.table(AC_NoAsy.MG1p3.5.ediff[order(as.numeric(AC_NoAsy.MG1p3.5.ediff$Z), decreasing = TRUE), ], file = "AC_NoAsy.MG1_state3v5_SCDE_results.txt", row.names = TRUE, col.names = TRUE, sep = "\t", quote = FALSE)
 
 ####Note for doing GSEA, based on what I did previously in Elife, I took the Z score from lowest to highest as my ranked file in GSEA
 
