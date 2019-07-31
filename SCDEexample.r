@@ -1,3 +1,73 @@
+
+###Slightly up to date example, just in terms of using the new single cell obj ###########
+
+#########Emb 4&9 seur SCDE State 6 het early progenitors vs state 5 ##################################
+
+
+
+PrjFlk1.Emb.PostMon49.6prej <- PrjFlk1.Emb.PostMon4_9[,PrjFlk1.Emb.PostMon4_9$Mon_State == 6]
+PrjFlk1.Emb.PostMon49.6prej <- PrjFlk1.Emb.PostMon49.6prej[,PrjFlk1.Emb.PostMon49.6prej$res.1 == 4]
+PrjFlk1.Emb.PostMon49.6pregHet <- PrjFlk1.Emb.PostMon49.6prej[,PrjFlk1.Emb.PostMon49.6prej$Genotype == "Het"]
+
+PrjFlk1.Emb.PostMon49.5 <- PrjFlk1.Emb.PostMon4_9[,PrjFlk1.Emb.PostMon4_9$Mon_State == 5]
+PrjFlk1.Emb.PostMon49.5Het <- PrjFlk1.Emb.PostMon49.5[,PrjFlk1.Emb.PostMon49.5$Genotype == "Het"]
+
+PrjFlk1.Emb.PostMon49.6pr5Het <- cbind(PrjFlk1.Emb.PostMon49.6pregHet,PrjFlk1.Emb.PostMon49.5Het)
+
+
+PrjFlk1.Emb.PostMon49.6pr5Het.counts <- as.data.frame(as.matrix(counts(PrjFlk1.Emb.PostMon49.6pr5Het))) ####converting to dataframe helps with weird name lenght issues: "length of 'dimnames' [2] not equal to array extent"
+
+###for some reason, when i try to run the obj in scde, to do the .err, it says the counts arent integers, when they defo are. I have to use this to get the data in the correct format but you might find you dont need this line
+PrjFlk1.Emb.PostMon49.6pr5Het.counts<-apply(PrjFlk1.Emb.PostMon49.6pr5Het.counts,2,function(x) {storage.mode(x) <- 'integer'; x})
+
+
+###Adding catagory name to the beginning of each cell name
+colnames(PrjFlk1.Emb.PostMon49.6pr5Het.counts) <- ifelse(PrjFlk1.Emb.PostMon49.6pr5Het$Mon_State == "6", gsub("10x", "10x_St6", colnames(PrjFlk1.Emb.PostMon49.6pr5Het.counts)), gsub("10x", "10x_St5", colnames(PrjFlk1.Emb.PostMon49.6pr5Het.counts)))
+
+
+####appending feat
+sg <- factor(gsub("(10x_St6|10x_St5).*", "\\1", colnames(PrjFlk1.Emb.PostMon49.6pr5Het.counts)), levels = c("10x_St6", "10x_St5")) ###levels have to match the Gsub
+names(sg) <- colnames(PrjFlk1.Emb.PostMon49.6pr5Het.counts)
+table(sg)
+
+sg
+10x_St6 10x_St5 
+7      17
+
+##here min.lib.size is min no of genes detected. DOnt have to worry too much as we det this ealier making the sc3 obj
+
+cd <- clean.counts(PrjFlk1.Emb.PostMon49.6pr5Het.counts, min.lib.size=1000, min.reads = 1, min.detected = 1)
+###error fitting shiz
+
+PrjFlk1.Emb.PostMon49.6pr5Het.err <- scde.error.models(counts = cd, groups = sg, n.cores = 1, threshold.segmentation = TRUE, save.crossfit.plots = FALSE, save.model.plots = FALSE, verbose = 1)
+
+valid.cells <- PrjFlk1.Emb.PostMon49.6pr5Het.err$corr.a > 0
+
+##filter by valid cells
+PrjFlk1.Emb.PostMon49.6pr5Het.err <- PrjFlk1.Emb.PostMon49.6pr5Het.err[valid.cells, ]
+
+# estimate gene expression prior
+PrjFlk1.Emb.PostMon49.6pr5Het.prior <- scde.expression.prior(models = PrjFlk1.Emb.PostMon49.6pr5Het.err, counts = cd, length.out = 400, show.plot = TRUE)
+
+###the show we all came here for
+PrjFlk1.Emb.PostMon49.6pr5Het.groups <- factor(gsub("(10x_St6|10x_St5).*", "\\1", rownames(PrjFlk1.Emb.PostMon49.6pr5Het.err)), levels = c("10x_St6","10x_St5"))
+names(PrjFlk1.Emb.PostMon49.6pr5Het.groups) <- row.names(PrjFlk1.Emb.PostMon49.6pr5Het.err)
+PrjFlk1.Emb.PostMon49.6pr5Het.ediff <- scde.expression.difference(PrjFlk1.Emb.PostMon49.6pr5Het.err, cd, PrjFlk1.Emb.PostMon49.6pr5Het.prior, groups  =  PrjFlk1.Emb.PostMon49.6pr5Het.groups, n.randomizations  =  100, n.cores  =  1, verbose  =  1)
+
+# write out a table with all the results, showing most significantly different genes (in both directions) on top
+write.table(PrjFlk1.Emb.PostMon49.6pr5Het.ediff[order(as.numeric(PrjFlk1.Emb.PostMon49.6pr5Het.ediff$Z), decreasing = TRUE), ], file = "PrjFlk1.Emb.4&9_ST6-progen_hetVs_St5Het_SCDE_results.txt", row.names = TRUE, col.names = TRUE, sep = "\t", quote = FALSE)
+
+##This graph shows diff exp of a single gene. Can be very useful for confirming which of your groups is the positive or negative end of the SCDE. Best way of doing this getting the highest positive or negative gene then plotting that
+png("Upp1.png",width = 6, height = 8, units = 'in', res = 600)
+scde.test.gene.expression.difference("Upp1", models = PrjFlk1.Emb.PostMon49.6pr5Het.err, counts = cd, prior = PrjFlk1.Emb.PostMon49.6pr5Het.prior)
+dev.off()
+
+
+
+
+
+##~Below is an older but good example. Also at the end has a nice loop for producing single gene graphs.
+
 ############## SCDE on the two MG1 groups -  so its a comparison of the MG1s in states 3 and 5 ###################
 nums=c(3,5)
 
