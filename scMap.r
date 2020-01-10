@@ -39,6 +39,11 @@ plot(
   )
 )
 
+
+##adding labels back to the object as a new column
+SCE.keep.filt$scMap <- scmapCluster_results$scmap_cluster_labs[,'yan']
+
+
 ###doing again only this time mappinng my data organised by cell phase to condition of Tman data.
 plot(
   getSankey(
@@ -70,7 +75,7 @@ plot(
 
 #####Cell to cell mapping ##################################
 
-###This one I don't use at all, but you might find it useful. Instead of seeing what catagories your cells map to in the other dataset, you can map your cells directly to the cells in the other dataset
+###This one I don't use at all, but you might find it useful (but you prob wont use it at all). Instead of seeing what catagories your cells map to in the other dataset, you can map your cells directly to the cells in the other dataset
 ###The problem is it creates too many pathways, like it's too hard to discern anything useful.
 
 

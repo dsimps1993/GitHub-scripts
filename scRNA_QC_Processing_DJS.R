@@ -2,7 +2,9 @@
 
 ###Created by Daniel J Simpson 15/08/18 #### Updated 11/11/19 with Seurat 3.0 
 
-###From here on out, your single cell object (the object containing your single cell data) will be called "Obj". But I recommend you do find and replace to change it to a name more relevant to your project (Dan can explain this to you).
+###From here on out, your single cell object (the object containing your single cell data) will be called "Obj". 
+###But I recommend you do find and replace to change it to a name more relevant to your project (Dan can explain this to you).
+###To replace Obj, make sure you do replace (with match case ticked) for "Obj.", that full stop is very important....
 
 
 ##################### Loading 10x Data (if data is 10x)   ######################################################
@@ -201,7 +203,7 @@ plotQC(Obj.sce.keep, type = "exprs-freq-vs-mean")
 dev.off()
 
 
-###plot this later if you have time, it shows how much garbage is in the yolk sac
+###plot the relative proportion of the library size that is accounted for by the most highly expressed features for each cell
 png("Obj_QC_scaterplot.png", width = 8, height = 6, units = 'in', res = 400)
 par(mfrow=c(1,2)) #, mar=c(5.1, 4.1, 0.1, 0.1))
 plotScater(Obj.sce.keep, colour_by = "Set")
